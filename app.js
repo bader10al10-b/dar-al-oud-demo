@@ -24,7 +24,7 @@ const FAQ=[["ما المنتجات المتوفرة لدى دار العود؟",
  ["هل أقدر أطلب المنتجات كهدايا؟","أكيد، كل الطلبات تتغلف مجانًا وتقدر تكتب ملاحظة الإهداء في السلة."],
  ["كيف أدفع؟","كاش عند الاستلام، أو أونلاين (Apple Pay، بطاقة، تابي وتمارا) بعد تفعيل بوابة الدفع."],
  ["كيف أحافظ على العطر بعد فتحه؟","احفظه بعيد عن الشمس والحرارة، وسكّر الغطاء زين بعد كل استخدام."]];
-const REELS=[["p1-set","كيف تختار عطرك؟"],["p8-bakhoor","طريقة التبخير الصح"],["p4-amber-allover","وين ترش الاولوفر؟"],["p11-eburner","المبخرة الكهربائية"],["p3-rose","ورد الطائف"]];
+const REELS=[["reel1","كيف تختار عطرك؟"],["reel2","طريقة التبخير الصح"],["reel3","وين ترش الأولوفر؟"]];
 const PAYS=[{id:"apple",lg:"Apple Pay",nm:"آبل باي",s:"أونلاين",on:1},{id:"card",lg:"VISA · MC",nm:"بطاقة",s:"فيزا / ماستركارد",on:1},{id:"bnpl",lg:"tabby · tamara",nm:"تابي / تمارا",s:"قسّطها على 4 دفعات",on:1},{id:"cash",lg:"💵",nm:"كاش عند الاستلام",s:"ادفع لما يوصلك",on:0}];
 const EMS=["عجمان","الشارقة","دبي","أبوظبي","العين","أم القيوين","رأس الخيمة","الفجيرة"];
 
@@ -45,7 +45,7 @@ function card(p){const s=p.s[0],d=pct(s);
 function renderChips(){$("#chips").innerHTML=CATS.map(([id,n])=>`<button class="${id===cat?"on":""}" data-c="${id}">${n}</button>`).join("")}
 function renderGrid(){const l=PRODUCTS.filter(p=>cat==="all"||(cat==="offers"?p.s.some(x=>x[2]):p.cat===cat));$("#grid").innerHTML=l.map(card).join("")}
 function renderStatic(){
- $("#reels").innerHTML=REELS.map(([im,t])=>`<div class="reel"><img src="img/${im}.svg" alt=""><em>مثال</em><div class="play">▶</div><span>${t}</span></div>`).join("");
+ $("#reels").innerHTML=REELS.map(([f,t],i)=>`<div class="reel" data-reel="${i}"><video src="video/${f}.mp4" poster="video/poster${i+1}.jpg" muted loop playsinline autoplay preload="metadata"></video><div class="play">▶</div><span>${t}</span></div>`).join("");
  $("#bars").innerHTML=BARS.map(([n,p])=>`<div class="bar"><span>${n}</span><i style="--p:${p}%"></i><span>${p}٪</span></div>`).join("");
  $("#revs").innerHTML=REVIEWS.map(([n,pr,t,r,w])=>`<div class="rev"><div class="rh"><b>${n}<span class="vb">مشتري</span></b><small>${w}</small></div><div class="stars">${stars(r)}</div><div class="mut" style="font-size:11.5px">${pr}</div><p>${t}</p></div>`).join("");
  renderFaq("");
@@ -97,7 +97,25 @@ function validate(){if(!cart.length)return"السلة فاضية";if(!$("#cName"
  const ph=$("#cPhone").value.replace(/[\s-]/g,"").replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));if(!/^(\+?971|0)?5\d{8}$/.test(ph))return"اكتب رقم جوال إماراتي صحيح";return""}
 function openCart(){renderCart();$("#cOv").hidden=false}
 
+/* reel player */
+let ri=0;const rv=()=>$("#rpV");
+function openReel(i){ri=(i+REELS.length)%REELS.length;const v=rv();$("#rpBars").innerHTML=REELS.map((_,k)=>`<i><b style="width:${k<ri?100:0}%"></b></i>`).join("");
+ $("#rpTitle").textContent=REELS[ri][1];v.poster=`video/poster${ri+1}.jpg`;v.src=`video/${REELS[ri][0]}.mp4`;v.currentTime=0;$("#rp").hidden=false;$("#rpPlay").hidden=true;
+ document.querySelectorAll(".reel video").forEach(x=>x.pause());const pr=v.play();if(pr)pr.catch(()=>{$("#rpPlay").hidden=false})}
+function closeReel(){const v=rv();v.pause();$("#rp").hidden=true;document.querySelectorAll(".reel video").forEach(x=>x.play().catch(()=>{}))}
+rv().addEventListener("timeupdate",()=>{const v=rv(),b=$("#rpBars").children[ri];if(b&&v.duration)b.firstChild.style.width=(v.currentTime/v.duration*100)+"%"});
+rv().addEventListener("ended",()=>{ri<REELS.length-1?openReel(ri+1):closeReel()});
+rv().addEventListener("click",()=>{const v=rv();if(v.paused){v.play();$("#rpPlay").hidden=true}else{v.pause();$("#rpPlay").hidden=false}});
+let tx=null;$("#rp").addEventListener("touchstart",e=>{tx=e.touches[0].clientX},{passive:true});
+$("#rp").addEventListener("touchend",e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx;tx=null;if(Math.abs(dx)>50)openReel(ri+(dx>0?1:-1))});
+document.addEventListener("keydown",e=>{if($("#rp").hidden)return;if(e.key==="Escape")closeReel();if(e.key==="ArrowLeft")openReel(ri+1);if(e.key==="ArrowRight")openReel(ri-1)});
+
 document.addEventListener("click",e=>{
+ const rl=e.target.closest(".reel");if(rl){openReel(+rl.dataset.reel);return}
+ if(e.target.closest("#rpClose")){closeReel();return}
+ if(e.target.closest("#rpNext")){openReel(ri+1);return}
+ if(e.target.closest("#rpPrev")){openReel(ri-1);return}
+ if(e.target.closest("#rpShop")){closeReel();document.getElementById("products").scrollIntoView({behavior:"smooth"});return}
  const ov=e.target.classList&&e.target.classList.contains("ov");if(ov){e.target.hidden=true;return}
  const el=e.target.closest("button,[data-open],a");if(!el)return;
  if(el.id!=="menuBtn"&&!el.closest("#menu"))$("#menu").hidden=true;
@@ -123,5 +141,6 @@ renderChips();renderGrid();renderStatic();renderPay();renderCart();
 /* local preview helper for screenshots: ?shot=product | ?shot=cart */
 (function(){const q=new URLSearchParams(location.search).get("shot");if(!q)return;
  if(q==="product")openP(1);
+ if(q==="reel")openReel(+(new URLSearchParams(location.search).get("i")||0));
  if(q==="cart"){cart=[{id:1,size:0,qty:1},{id:8,size:0,qty:2},{id:4,size:0,qty:1}];$("#cName").value="محمد أحمد";$("#cArea").value="النعيمية، شارع الشيخ خليفة";$("#cPhone").value="0501234567";$("#cNote").value="تغليف هدية لو سمحتوا";pay="apple";renderPay();openCart();
   document.body.dataset.wa=waUrl();document.body.dataset.valid=validate()||"ok"}})();

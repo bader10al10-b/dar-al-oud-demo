@@ -37,7 +37,7 @@
 
   <section class="blk">
     <h2>شاهد قبل ما تطلب</h2>
-    <p class="mut sm">فيديوهات توضيحية (مثال)</p>
+    <p class="mut sm">نصايح سريعة من دار العود</p>
     <div class="reels" id="reels"></div>
   </section>
 
@@ -113,6 +113,16 @@
   </div>
   <div class="sfoot"><button class="gbtn" id="sendBtn">🔒 اطلب الآن</button></div>
 </div></div>
+<!-- reel player -->
+<div class="rp" id="rp" hidden>
+  <div class="rp-bars" id="rpBars"></div>
+  <div class="rp-top"><b id="rpTitle"></b><button class="rp-x" id="rpClose" aria-label="إغلاق">×</button></div>
+  <video id="rpV" playsinline muted preload="auto"></video>
+  <button class="rp-nav rp-prev" id="rpPrev" aria-label="السابق">›</button>
+  <button class="rp-nav rp-next" id="rpNext" aria-label="التالي">‹</button>
+  <div class="rp-play" id="rpPlay" hidden>▶</div>
+  <div class="rp-bot"><button class="rp-shop" id="rpShop">تسوّق المنتجات</button></div>
+</div>
 <div class="toast" id="toast"></div>
 <script src="app.js"></script>
 </body>
